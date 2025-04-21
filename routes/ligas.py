@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_required, current_user
 from models import db, Liga, Equipo, Partido
 import random
+from itertools import combinations, cycle
 
 ligas_bp = Blueprint("ligas", __name__)
 
@@ -104,24 +105,38 @@ def generar_calendario(liga_id):
         return redirect(url_for("ligas.gestionar_equipos", liga_id=liga_id))
 
     partidos_generados = []
-    for i in range(len(equipos)):
-        for j in range(i + 1, len(equipos)):
-            equipo_local = equipos[i]
-            equipo_visitante = equipos[j]
-            arbitro = random.choice([e for e in equipos if e != equipo_local and e != equipo_visitante])
-            tutor_grada_local = random.choice([e for e in equipos if e != equipo_local and e != equipo_visitante and e != arbitro])
-            tutor_grada_visitante = random.choice([e for e in equipos if e != equipo_local and e != equipo_visitante and e != arbitro and e != tutor_grada_local])
+    partidos_posibles = list(combinations(equipos, 2))
+    random.shuffle(partidos_posibles)
 
-            partido = Partido(
-                liga_id=liga.id,
-                equipo_local_id=equipo_local.id,
-                equipo_visitante_id=equipo_visitante.id,
-                arbitro_id=arbitro.id,
-                tutor_grada_local_id=tutor_grada_local.id,
-                tutor_grada_visitante_id=tutor_grada_visitante.id
-            )
-            db.session.add(partido)
-            partidos_generados.append(partido)
+    rotacion = cycle(equipos)
+    en_juego = []
+
+    for equipo_local, equipo_visitante in partidos_posibles:
+        # Asegurarse de no repetir equipos inmediatamente
+        if equipo_local in en_juego or equipo_visitante in en_juego:
+            siguiente = next(rotacion)
+            while siguiente in en_juego:
+                siguiente = next(rotacion)
+            en_juego = [siguiente]
+            continue
+
+        en_juego = [equipo_local, equipo_visitante]
+
+        arbitro = random.choice([e for e in equipos if e not in en_juego])
+        tutor_grada_local = random.choice([e for e in equipos if e not in en_juego and e != arbitro])
+        posibles_grada_visitante = [e for e in equipos if e not in en_juego and e != arbitro and e != tutor_grada_local]
+        tutor_grada_visitante = random.choice(posibles_grada_visitante) if posibles_grada_visitante else None
+
+        partido = Partido(
+            liga_id=liga.id,
+            equipo_local_id=equipo_local.id,
+            equipo_visitante_id=equipo_visitante.id,
+            arbitro_id=arbitro.id,
+            tutor_grada_local_id=tutor_grada_local.id,
+            tutor_grada_visitante_id=tutor_grada_visitante.id if tutor_grada_visitante else None
+        )
+        db.session.add(partido)
+        partidos_generados.append(partido)
 
     db.session.commit()
 
@@ -140,3 +155,19 @@ def eliminar_liga(liga_id):
     db.session.commit()
     flash("Liga eliminada con éxito.")
     return redirect(url_for("ligas.dashboard"))
+
+@ligas_bp.route("/liga/<int:liga_id>/eliminar_partidos", methods=["POST"])
+@login_required
+def eliminar_partidos_de_liga(liga_id):
+    liga = Liga.query.filter_by(id=liga_id, usuario_id=current_user.id).first()
+    if not liga:
+        flash("Liga no encontrada.")
+        return redirect(url_for("ligas.dashboard"))
+
+    partidos = Partido.query.filter_by(liga_id=liga_id).all()
+    for p in partidos:
+        db.session.delete(p)
+    db.session.commit()
+
+    flash("Todos los partidos de la liga han sido eliminados. Puedes generar un nuevo calendario.")
+    return redirect(url_for("ligas.ver_liga", liga_id=liga.id))

@@ -17,6 +17,11 @@
                     <a href="{{ url_for('partidos.generar_calendario', liga_id=liga.id) }}" class="btn btn-outline-success w-100">📅 Generar calendario</a>
                 </div>
                 <div class="col-md-4">
+                    <form method="POST" action="{{ url_for('ligas.eliminar_partidos_de_liga', liga_id=liga.id) }}" onsubmit="return confirm('¿Deseas eliminar todos los partidos de esta liga y empezar de nuevo?');">
+                        <button type="submit" class="btn btn-outline-warning w-100">🔄 Reiniciar calendario</button>
+                    </form>
+                </div>
+                <div class="col-md-4">
                     <form method="POST" action="{{ url_for('ligas.eliminar_liga', liga_id=liga.id) }}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta liga? Esta acción no se puede deshacer.');">
                         <button type="submit" class="btn btn-outline-danger w-100">🗑️ Eliminar liga</button>
                     </form>
