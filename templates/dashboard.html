@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Panel - Mi Liga{% endblock %}
+
+{% block content %}
+<div class="container text-center">
+    <h1>Bienvenido, {{ usuario.codigo }}</h1>
+    <p>Desde aquí puedes gestionar tus ligas y partidos.</p>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <a href="{{ url_for('ligas.dashboard') }}" class="btn btn-primary btn-lg w-100">Mis Ligas</a>
+        </div>
+        <div class="col-md-4">
+            {% for liga in ligas %}
+                <a href="{{ url_for('partidos.calendario', liga_id=liga.id) }}" class="btn btn-success btn-lg w-100">Calendario - {{ liga.nombre }}</a>
+            {% endfor %}
+        </div>
+        <div class="col-md-4">
+            {% for liga in ligas %}
+                <a href="{{ url_for('partidos.clasificacion', liga_id=liga.id) }}" class="btn btn-info btn-lg w-100 mb-2">Clasificación - {{ liga.nombre }}</a>
+            {% endfor %}
+        </div>
+        <div class="col mt-4">
+            <a href="{{ url_for('ligas.crear_liga') }}" class="btn btn-warning btn-lg w-100">➕ Crear nueva liga</a>
+        </div>
+    </div>
+
+    {% if ligas %}
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <h3>Tus Ligas</h3>
+                <ul class="list-group">
+                    {% for liga in ligas %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ liga.nombre }}
+                            <a href="{{ url_for('ligas.ver_liga', liga_id=liga.id) }}" class="btn btn-outline-secondary btn-sm">Gestionar</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% else %}
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <p class="text-muted">Aún no has creado ninguna liga.</p>
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="row mt-5">
+        <div class="col-md-12 text-center">
+            <div class="border-top pt-3 mt-4">
+                <p class="text-muted small mb-1">
+                    <span class="fw-bold text-dark">✨ Los Mundos Edufis</span> — creado con ❤️ por <strong>Luis Vilela</strong>
+                </p>
+                <a href="https://donar.losmundosedufis.com" class="btn btn-outline-danger btn-sm" target="_blank">☕ Invítame a un café</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

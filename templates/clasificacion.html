@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Clasificación{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Clasificación</h2>
+    <p>Consulta la tabla de posiciones con todos los criterios educativos.</p>
+
+    {% if clasificacion %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center align-middle">
+                <thead>
+                    <tr>
+                        <th class="bg-primary text-white text-center">#</th>
+                        <th class="bg-primary text-white text-center">Equipo</th>
+                        <th class="bg-primary text-white text-center">Puntos Totales</th>
+                        <th class="bg-primary text-white text-center">Ganados</th>
+                        <th class="bg-primary text-white text-center">Empatados</th>
+                        <th class="bg-primary text-white text-center">Perdidos</th>
+                        <th class="bg-primary text-white text-center">Goles a Favor</th>
+                        <th class="bg-primary text-white text-center">Goles en Contra</th>
+                        <th class="bg-primary text-white text-center">Juego Limpio</th>
+                        <th class="bg-primary text-white text-center">Árbitro</th>
+                        <th class="bg-primary text-white text-center">Grada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipo in clasificacion %}
+                    <tr class="align-middle">
+                        <td>{{ loop.index }}</td>
+                        <td>{{ equipo.nombre }}</td>
+                        <td>{{ equipo.puntos_totales }}</td>
+                        <td>{{ equipo.ganados }}</td>
+                        <td>{{ equipo.empatados }}</td>
+                        <td>{{ equipo.perdidos }}</td>
+                        <td>{{ equipo.goles_favor }}</td>
+                        <td>{{ equipo.goles_contra }}</td>
+                        <td>{{ equipo.puntos_juego_limpio }}</td>
+                        <td>{{ equipo.puntos_arbitro }}</td>
+                        <td>{{ equipo.puntos_grada }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">Todavía no hay datos de clasificación.</div>
+    {% endif %}
+</div>
+{% endblock %}

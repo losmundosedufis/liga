@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}🎮 Gestionar Encuentro (Panel del alumnado){% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>🎮 Gestionar Encuentro (Panel del alumnado)</h2>
+    <p class="fs-4 fw-bold text-center">{{ nombre_local }} vs {{ nombre_visitante }}</p>
+
+    <div class="text-center my-4">
+        <h4>⏱️ Tiempo de partido</h4>
+        <div>
+            <label for="tiempo_inicial">Minutos totales:</label>
+            <input type="number" id="tiempo_inicial" value="20" min="1" max="90" style="width: 60px;">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="iniciarTemporizador()" aria-label="Iniciar el temporizador">Iniciar</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="pausarTemporizador()" aria-label="Pausar el temporizador">Pausar</button>
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="reiniciarTemporizador()" aria-label="Reiniciar el temporizador">Reiniciar</button>
+        </div>
+        <h2 id="temporizador">20:00</h2>
+    </div>
+
+    <script>
+        const audioGol = new Audio('/static/sounds/gol.mp3');
+        const audioSilbato = new Audio('/static/sounds/silbato.mp3');
+
+        let tiempoRestante = 20 * 60; // segundos
+        let temporizadorActivo = false;
+        let intervalId = null;
+
+        function actualizarTemporizador() {
+            const minutos = Math.floor(tiempoRestante / 60).toString().padStart(2, '0');
+            const segundos = (tiempoRestante % 60).toString().padStart(2, '0');
+            document.getElementById("temporizador").textContent = `${minutos}:${segundos}`;
+        }
+
+        function iniciarTemporizador() {
+            if (!temporizadorActivo) {
+                const valorInput = parseInt(document.getElementById("tiempo_inicial").value);
+                if (!isNaN(valorInput)) {
+                    tiempoRestante = valorInput * 60;
+                    actualizarTemporizador();
+                }
+                temporizadorActivo = true;
+                intervalId = setInterval(() => {
+                    if (tiempoRestante > 0) {
+                        tiempoRestante--;
+                        actualizarTemporizador();
+                    } else {
+                        clearInterval(intervalId);
+                        temporizadorActivo = false;
+                    }
+                }, 1000);
+            }
+        }
+
+        function pausarTemporizador() {
+            if (temporizadorActivo) {
+                clearInterval(intervalId);
+                temporizadorActivo = false;
+            }
+        }
+
+        function reiniciarTemporizador() {
+            pausarTemporizador();
+            const valorInput = parseInt(document.getElementById("tiempo_inicial").value);
+            if (!isNaN(valorInput)) {
+                tiempoRestante = valorInput * 60;
+                actualizarTemporizador();
+            }
+        }
+
+        function sonarGol() {
+            audioGol.play();
+        }
+        function sonarSilbato() {
+            audioSilbato.play();
+        }
+
+        async function actualizarGol(equipo, accion) {
+            try {
+                const response = await fetch("/api/actualizar_gol", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                body: JSON.stringify({
+                        partido_id: "{{ partido.id }}",
+                        equipo: equipo,
+                        accion: accion
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById("marcador_local").textContent = data.goles_local;
+                    document.getElementById("marcador_visitante").textContent = data.goles_visitante;
+                } else {
+                    alert(data.error || "Error al actualizar el marcador");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("No se pudo conectar con el servidor.");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", actualizarTemporizador);
+    </script>
+
+    {% if partido.finalizado %}
+    <div class="alert alert-success text-center fw-bold">✅ Este partido ya ha sido finalizado. No se puede modificar.</div>
+    {% endif %}
+
+    <form method="POST">
+        <div class="row text-center align-items-center my-4">
+            <div class="col-md-5">
+                <div class="card text-center p-3 shadow-sm">
+                    <h4 class="fw-bold" aria-label="Equipo local">{{ nombre_local }} 🏠</h4>
+                    <div class="my-2">
+                        <button type="button" class="btn btn-outline-success btn-sm mx-1" onclick="sonarGol(); actualizarGol('local', 'sumar')" {% if partido.finalizado %}disabled{% endif %}>✅ +1 Punto</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm mx-1" onclick="sonarGol(); actualizarGol('local', 'restar')" {% if partido.finalizado %}disabled{% endif %}>🔄 -1 Punto</button>
+                    </div>
+                    <h2 class="display-4" id="marcador_local">{{ partido.goles_local }}</h2>
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <h3 class="fw-bold">VS</h3>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card text-center p-3 shadow-sm">
+                    <h4 class="fw-bold" aria-label="Equipo visitante">{{ nombre_visitante }} 🚗</h4>
+                    <div class="my-2">
+                        <button type="button" class="btn btn-outline-success btn-sm mx-1" onclick="sonarGol(); actualizarGol('visitante', 'sumar')" {% if partido.finalizado %}disabled{% endif %}>✅ +1 Punto</button>
+                        <button type="button" class="btn btn-outline-danger btn-sm mx-1" onclick="sonarGol(); actualizarGol('visitante', 'restar')" {% if partido.finalizado %}disabled{% endif %}>🔄 -1 Punto</button>
+                    </div>
+                    <h2 class="display-4" id="marcador_visitante">{{ partido.goles_visitante }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <h5>Puntos por valores educativos</h5>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="juego_limpio_local" id="juego_limpio_local" {% if partido.finalizado %}disabled{% endif %}>
+            <label class="form-check-label" for="juego_limpio_local">
+                🤝 Juego limpio ({{ nombre_local }})
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="juego_limpio_visitante" id="juego_limpio_visitante" {% if partido.finalizado %}disabled{% endif %}>
+            <label class="form-check-label" for="juego_limpio_visitante">
+                🤝 Juego limpio ({{ nombre_visitante }})
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="arbitro_correcto" id="arbitro_correcto" {% if partido.finalizado %}disabled{% endif %}>
+            <label class="form-check-label" for="arbitro_correcto">
+                🧑‍⚖️ Árbitro justo ({{ partido.arbitro }})
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="grada_local" id="grada_local" {% if partido.finalizado %}disabled{% endif %}>
+            <label class="form-check-label" for="grada_local">
+                📣 Grada con respeto ({{ partido.tutor_grada_local }})
+            </label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="grada_visitante" id="grada_visitante" {% if partido.finalizado %}disabled{% endif %}>
+            <label class="form-check-label" for="grada_visitante">
+                📣 Grada con respeto ({{ partido.tutor_grada_visitante }})
+            </label>
+        </div>
+
+        <div class="mt-4 p-3 border rounded bg-light">
+          <h5>🎓 Resumen de puntos educativos a otorgar</h5>
+          <ul>
+            {% if request.form.get("juego_limpio_local") %}
+              <li>🏅 {{ nombre_local }} (🤝 juego limpio): +1 punto</li>
+            {% endif %}
+            {% if request.form.get("juego_limpio_visitante") %}
+              <li>🏅 {{ nombre_visitante }} (🤝 juego limpio): +1 punto</li>
+            {% endif %}
+            {% if request.form.get("arbitro_correcto") %}
+              <li>🧑‍⚖️ {{ partido.arbitro }} (🧑‍⚖️ árbitro justo): +1 punto</li>
+            {% endif %}
+            {% if request.form.get("grada_local") %}
+              <li>🎉 {{ partido.tutor_grada_local }} (📣 grada con respeto): +1 punto</li>
+            {% endif %}
+            {% if request.form.get("grada_visitante") %}
+              <li>🎉 {{ partido.tutor_grada_visitante }} (📣 grada con respeto): +1 punto</li>
+            {% endif %}
+          </ul>
+        </div>
+        <button type="submit" name="accion" value="finalizar" class="btn btn-primary mt-3" {% if partido.finalizado %}disabled{% endif %}>✅ Confirmar final del partido</button>
+    </form>
+
+    {% if partido.finalizado %}
+    <div class="mt-4 p-3 border rounded bg-success text-white">
+        <h5>📊 Resumen del Partido</h5>
+        <p><strong>Marcador final:</strong> {{ nombre_local }} {{ partido.goles_local }} - {{ partido.goles_visitante }} {{ nombre_visitante }}</p>
+        <p><strong>Reconocimientos educativos:</strong></p>
+        <ul>
+            {% if partido.puntos_juego_limpio_local %}<li>🏅 {{ nombre_local }}: +1 punto por 🤝 juego limpio</li>{% endif %}
+            {% if partido.puntos_juego_limpio_visitante %}<li>🏅 {{ nombre_visitante }}: +1 punto por 🤝 juego limpio</li>{% endif %}
+            {% if partido.puntos_arbitro %}<li>🧑‍⚖️ Árbitro: +1 punto</li>{% endif %}
+            {% if partido.puntos_grada_local %}<li>🎉 Grada {{ nombre_local }}: +1 punto</li>{% endif %}
+            {% if partido.puntos_grada_visitante %}<li>🎉 Grada {{ nombre_visitante }}: +1 punto</li>{% endif %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

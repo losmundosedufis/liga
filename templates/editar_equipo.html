@@ -1,0 +1,23 @@
+
+
+{% extends "base.html" %}
+
+{% block title %}Editar Equipo - {{ liga.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Editar equipo: {{ equipo.nombre }}</h2>
+
+    <form method="POST">
+        <div class="mb-3">
+            <label for="nombre_equipo" class="form-label">Nuevo nombre del equipo</label>
+            <input type="text" class="form-control" id="nombre_equipo" name="nombre_equipo" value="{{ equipo.nombre }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+    </form>
+
+    <div class="mt-4">
+        <a href="{{ url_for('ligas.gestionar_equipos', liga_id=liga.id) }}" class="btn btn-secondary">⬅ Volver a la gestión de equipos</a>
+    </div>
+</div>
+{% endblock %}

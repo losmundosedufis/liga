@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Calendario{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Calendario de Partidos</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} text-center">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <p class="lead">Consulta los partidos programados de la liga. A continuación se muestra el calendario con los detalles de cada partido, incluyendo los roles educativos.</p>
+
+    {% if partidos %}
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Local</th>
+                        <th>Visitante</th>
+                        <th>Árbitro</th>
+                        <th>Grada Local</th>
+                        <th>Grada Visitante</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for partido in partidos %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ partido.equipo_local.nombre }}</td>
+                        <td>{{ partido.equipo_visitante.nombre }}</td>
+                        <td>{{ partido.arbitro.nombre }}</td>
+                        <td>{{ partido.tutor_grada_local.nombre }}</td>
+                        <td>{{ partido.tutor_grada_visitante.nombre }}</td>
+                        <td>
+                            {% if partido.finalizado %}
+                                <span class="text-success fw-bold">
+                                  ✅ {{ partido.goles_local }} - {{ partido.goles_visitante }} Finalizado
+                                </span>
+                            {% else %}
+                                <span class="text-muted">⏳ En curso</span>
+                                <a href="{{ url_for('partidos.gestionar_partido', partido_id=partido.id) }}" class="btn btn-outline-primary btn-sm ms-2">Gestionar</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-warning">Aún no hay partidos programados.</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ liga.nombre }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h2 class="card-title mb-4">{{ liga.nombre }}</h2>
+            <p class="card-text">Aquí se muestran los datos básicos de la liga. Explora las opciones para gestionar equipos, generar calendarios y más.</p>
+
+            <div class="row g-3 my-4">
+                <div class="col-md-4">
+                    <a href="{{ url_for('ligas.gestionar_equipos', liga_id=liga.id) }}" class="btn btn-outline-primary w-100">➕ Añadir equipos</a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{{ url_for('partidos.generar_calendario', liga_id=liga.id) }}" class="btn btn-outline-success w-100">📅 Generar calendario</a>
+                </div>
+                <div class="col-md-4">
+                    <form method="POST" action="{{ url_for('ligas.eliminar_liga', liga_id=liga.id) }}" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta liga? Esta acción no se puede deshacer.');">
+                        <button type="submit" class="btn btn-outline-danger w-100">🗑️ Eliminar liga</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{{ url_for('ligas.dashboard') }}" class="btn btn-secondary">⬅ Volver al panel</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
