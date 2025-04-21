@@ -1,4 +1,10 @@
-Flask
+Flask>=2.0
 Flask-SQLAlchemy
 Flask-Login
+Flask-Migrate
 Werkzeug
+python-dotenv
+gunicorn
+pandas
+reportlab
+Flask-WTF
